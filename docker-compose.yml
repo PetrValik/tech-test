@@ -1,21 +1,81 @@
+# Runs V1 + V2 side by side on a shared database — useful for architectural comparison.
+# V1 → http://localhost:8000  |  V2 → http://localhost:8001
+# For independent testing of a single version use docker-compose.v1.yml or docker-compose.v2.yml.
+# Secrets: copy .env.example to .env and fill in DB_PASSWORD before running.
+
 services:
   api:
-      build: ./src
-      container_name: order-api
-      ports:
-          - 8000:8080
-      depends_on:
-        - db
-      links:
-        - "db:database"
+    build: ./src
+    container_name: order-api
+    ports:
+      - "8000:8080"
+    environment:
+      - OrderConnectionString=server=database;port=3306;database=orders;user=order-service;password=${DB_PASSWORD:?DB_PASSWORD is required - copy .env.example to .env}
+      - ASPNETCORE_ENVIRONMENT=Production
+      - Jwt__Authority=${JWT_AUTHORITY:-}
+      - Jwt__Audience=${JWT_AUDIENCE:-orders-api}
+    depends_on:
+      db:
+        condition: service_healthy
+    links:
+      - "db:database"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/health/ready || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  api-v2:
+    build: ./src-v2
+    container_name: order-api-v2
+    ports:
+      - "8001:8080"
+    environment:
+      - OrderConnectionString=server=database;port=3306;database=orders;user=order-service;password=${DB_PASSWORD:?DB_PASSWORD is required - copy .env.example to .env}
+      - ASPNETCORE_ENVIRONMENT=Production
+      - Database__ApplyMigrationsOnStartup=true
+      - Jwt__Authority=${JWT_AUTHORITY:-}
+      - Jwt__Audience=${JWT_AUDIENCE:-orders-api}
+      - Redis__ConnectionString=redis:6379
+      - Otel__ServiceName=order-api-v2
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    links:
+      - "db:database"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/health/ready || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
   db:
     image: mysql:5.7
     container_name: order-db
     volumes:
-          - ./mysql-init.sql:/docker-entrypoint-initdb.d/init.sql:delegated
-    environment:      
-      - MYSQL_ROOT_PASSWORD=nmCsdkhj20n@Sa
+      - ./mysql-init.sql:/docker-entrypoint-initdb.d/init.sql:delegated
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD:?DB_PASSWORD is required - copy .env.example to .env}
+      - MYSQL_DATABASE=orders
+      - MYSQL_USER=order-service
+      - MYSQL_PASSWORD=${DB_PASSWORD}
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --lower_case_table_names=1
     ports:
-      - 3306:3306
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: order-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --save "" --appendonly no
       

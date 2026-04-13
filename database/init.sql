@@ -1,9 +1,6 @@
--- Create Database and User
-CREATE DATABASE `orders` /*!40100 COLLATE 'latin1_swedish_ci' */;
-
--- Create User
-CREATE USER 'order-service'@'%' IDENTIFIED BY 'nmCsdkhj20n@Sa';
-GRANT ALL PRIVILEGES ON *.* TO 'order-service'@'%' IDENTIFIED BY 'nmCsdkhj20n@Sa' WITH GRANT OPTION;
+-- Database and user are created automatically by the MySQL Docker image
+-- via MYSQL_DATABASE, MYSQL_USER, and MYSQL_PASSWORD environment variables
+-- set in docker-compose. No credentials are hardcoded here.
 
 USE `orders`;
 
@@ -74,8 +71,8 @@ CREATE TABLE IF NOT EXISTS `order_product` (
   `Id` binary(16) NOT NULL,
   `ServiceId` binary(16) NOT NULL,
   `Name` varchar(100) NOT NULL,
-  `UnitCost` decimal(4,2) NOT NULL,
-  `UnitPrice` decimal(4,2) NOT NULL,
+  `UnitCost` decimal(10,4) NOT NULL,
+  `UnitPrice` decimal(10,4) NOT NULL,
   PRIMARY KEY (`Id`),
   CONSTRAINT `order_service_opfk_1` FOREIGN KEY (`ServiceId`) REFERENCES `order_service` (`Id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
@@ -85,10 +82,14 @@ CREATE TABLE IF NOT EXISTS `order` (
   `ResellerId` binary(16) NOT NULL,
   `CustomerId` binary(16) NOT NULL,
   `StatusId` binary(16) NOT NULL,
-  `CreatedDate` datetime NOT NULL,  
+  `CreatedDate` datetime NOT NULL,
+  `ConcurrencyStamp` varchar(32) NOT NULL DEFAULT '',
   PRIMARY KEY (`Id`),
   KEY `StatusId` (`StatusId`),
   KEY `CustomerId` (`CustomerId`),
+  KEY `ResellerId` (`ResellerId`),
+  KEY `CreatedDate` (`CreatedDate`),
+  KEY `StatusId_CreatedDate` (`StatusId`, `CreatedDate`),
   CONSTRAINT `order_ofk_1` FOREIGN KEY (`StatusId`) REFERENCES `order_status` (`Id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 

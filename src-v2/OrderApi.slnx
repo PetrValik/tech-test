@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Dockerfile" />
+    <File Path="README.md" />
+    <File Path="../docker-compose.v2.yml" />
+  </Folder>
+  <Project Path="OrderApi.Tests/OrderApi.Tests.csproj" />
+  <Project Path="OrderApi/OrderApi.csproj" />
+</Solution>

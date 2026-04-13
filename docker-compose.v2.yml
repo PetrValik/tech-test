@@ -1,0 +1,61 @@
+# Runs only V2 (vertical slice Minimal API) with its own isolated database and Redis.
+# V2 uses EF Core migrations applied on startup — no mysql-init.sql required.
+# Usage: docker compose -f docker-compose.v2.yml up
+# Secrets: copy .env.example to .env and fill in DB_PASSWORD before running.
+
+services:
+  api-v2:
+    build: ./src-v2
+    container_name: order-api-v2
+    ports:
+      - "8001:8080"
+    environment:
+      - OrderConnectionString=server=database;port=3306;database=orders;user=order-service;password=${DB_PASSWORD:?DB_PASSWORD is required - copy .env.example to .env}
+      - ASPNETCORE_ENVIRONMENT=Production
+      - Database__ApplyMigrationsOnStartup=true
+      - Jwt__Authority=${JWT_AUTHORITY:-}
+      - Jwt__Audience=${JWT_AUDIENCE:-orders-api}
+      - Redis__ConnectionString=${REDIS_CONNECTION_STRING:-redis:6379}
+      - Otel__ServiceName=order-api-v2
+      - Otel__Environment=${ASPNETCORE_ENVIRONMENT:-production}
+      # Uncomment to enable Azure Monitor tracing:
+      # - Otel__AzureMonitorConnectionString=${AZURE_MONITOR_CONNECTION_STRING:-}
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    links:
+      - "database:database"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/health/ready || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  database:
+    image: mysql:5.7
+    container_name: order-db-v2
+    volumes:
+      - db-v2-data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD:?DB_PASSWORD is required}
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --lower_case_table_names=1
+    ports:
+      - "3308:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: order-redis-v2
+    ports:
+      - "6379:6379"
+    command: redis-server --save "" --appendonly no
+
+volumes:
+  db-v2-data:

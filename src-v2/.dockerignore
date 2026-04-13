@@ -1,0 +1,9 @@
+**/bin/
+**/obj/
+**/.vs/
+**/logs/
+*.md
+*.csx
+*.user
+.git
+.gitignore

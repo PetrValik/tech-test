@@ -1,17 +1,25 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
-namespace Order.Data.Entities
+namespace Order.Data.Entities;
+
+/// <summary>
+/// EF Core entity that maps to the order_status table.
+/// Represents a lifecycle state such as "Created", "In Progress", "Failed", or "Completed".
+/// </summary>
+public class OrderStatus
 {
-    public partial class OrderStatus
-    {
-        public OrderStatus()
-        {
-            Order = new HashSet<Order>();
-        }
+    /// <summary>
+    /// Primary key stored as binary(16) in MySQL.
+    /// </summary>
+    public required byte[] Id { get; set; }
 
-        public byte[] Id { get; set; }
-        public string Name { get; set; }
+    /// <summary>
+    /// Status name, e.g. "Completed". Unique, max 20 characters.
+    /// </summary>
+    public required string Name { get; set; }
 
-        public virtual ICollection<Order> Order { get; set; }
-    }
+    /// <summary>
+    /// Navigation collection of all orders currently in this status.
+    /// </summary>
+    public ICollection<Order> Orders { get; set; } = [];
 }
