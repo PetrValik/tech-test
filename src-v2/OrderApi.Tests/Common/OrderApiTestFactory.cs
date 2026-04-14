@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using OrderApi.Infrastructure;
 using OrderApi.Infrastructure.Entities;
+using OrderApi.Services;
 
 namespace OrderApi.Tests.Common;
 
@@ -69,8 +70,8 @@ public class OrderApiTestFactory : WebApplicationFactory<Program>, IAsyncLifetim
 
             // Remove background cleanup services so they don't interfere with test data.
             var hostedService = services
-                .Where(s => s.ImplementationType?.Name == "StaleOrderCleanupService"
-                         || s.ImplementationType?.Name == "IdempotencyCleanupService")
+                .Where(s => s.ImplementationType == typeof(StaleOrderCleanupService)
+                         || s.ImplementationType == typeof(IdempotencyCleanupService))
                 .ToList();
             hostedService.ForEach(s => services.Remove(s));
 

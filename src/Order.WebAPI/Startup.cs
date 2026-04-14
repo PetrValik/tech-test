@@ -46,7 +46,8 @@ public class Startup
     public IConfiguration Configuration { get; }
 
     /// <summary>
-    /// Hosting environment used to conditionally enable features (e.g. auth, CORS, Swagger) and
+    /// Hosting environment used to conditionally enable features (e.g. auth, CORS, Swagger)
+    /// and select environment-specific configuration.
     /// </summary>
     private readonly IWebHostEnvironment _environment;
 
@@ -86,13 +87,7 @@ public class Startup
     {
         if (string.IsNullOrWhiteSpace(Configuration["Jwt:Authority"]))
         {
-            if (!env.IsDevelopment())
-            {
-                throw new InvalidOperationException(
-                    "Jwt:Authority must be configured in non-Development environments. " +
-                    "Set the Jwt__Authority environment variable.");
-            }
-            logger.LogWarning("Jwt:Authority is not configured — authentication is disabled. Set Jwt:Authority to enable token validation.");
+            logger.LogWarning("Jwt:Authority is not configured — authentication is disabled. Set Jwt__Authority to enable token validation.");
         }
 
         var corsOrigins = Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
@@ -108,11 +103,8 @@ public class Startup
         app.UseMiddleware<CorrelationIdMiddleware>();
         app.UseMiddleware<RequestLoggingMiddleware>();
 
-        if (env.IsDevelopment())
-        {
-            app.UseSwagger();
-            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Order API v1"));
-        }
+        app.UseSwagger();
+        app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Order API v1"));
 
         app.UseHttpsRedirection();
         app.UseCors();
@@ -207,7 +199,7 @@ public class Startup
             {
                 Title       = "Order API",
                 Version     = "v1",
-                Description = "Giacom Order API – manages orders, order items, and monthly profit reporting."
+                Description = "Order API – manages orders, order items, and monthly profit reporting."
             });
 
             var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";

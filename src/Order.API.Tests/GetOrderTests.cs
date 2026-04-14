@@ -59,7 +59,7 @@ public class GetOrderTests : ApiTestBase
 
         var order = await DeserializeAsync<OrderDetail>(response);
         Assert.That(order.Id, Is.EqualTo(orderId));
-        Assert.That(System.Linq.Enumerable.Count(order.Items), Is.EqualTo(1));
+        Assert.That(order.Items.Count, Is.EqualTo(1));
         Assert.That(order.TotalCost, Is.EqualTo(1.6m));
         Assert.That(order.TotalPrice, Is.EqualTo(1.8m));
     }

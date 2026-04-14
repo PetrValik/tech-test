@@ -262,3 +262,5 @@ Projects/ToolKit/Giacom\.ToolKit\.UI/node_modules_bak/
 
 # JetBrains
 *.idea
+# Claude AI
+.claude/

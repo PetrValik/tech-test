@@ -1,5 +1,7 @@
 # Runs V1 + V2 side by side on a shared database — useful for architectural comparison.
 # V1 → http://localhost:8000  |  V2 → http://localhost:8001
+# V2 applies EF Core migrations on startup to create the shared schema.
+# V1 starts after V2 is healthy to ensure tables exist.
 # For independent testing of a single version use docker-compose.v1.yml or docker-compose.v2.yml.
 # Secrets: copy .env.example to .env and fill in DB_PASSWORD before running.
 
@@ -10,12 +12,12 @@ services:
     ports:
       - "8000:8080"
     environment:
-      - OrderConnectionString=server=database;port=3306;database=orders;user=order-service;password=${DB_PASSWORD:?DB_PASSWORD is required - copy .env.example to .env}
+      - OrderConnectionString=server=database;port=3306;database=orders;user=order-service;password=${DB_PASSWORD:?DB_PASSWORD is required - copy .env.example to .env};SslMode=None
       - ASPNETCORE_ENVIRONMENT=Production
       - Jwt__Authority=${JWT_AUTHORITY:-}
       - Jwt__Audience=${JWT_AUDIENCE:-orders-api}
     depends_on:
-      db:
+      api-v2:
         condition: service_healthy
     links:
       - "db:database"
@@ -32,13 +34,14 @@ services:
     ports:
       - "8001:8080"
     environment:
-      - OrderConnectionString=server=database;port=3306;database=orders;user=order-service;password=${DB_PASSWORD:?DB_PASSWORD is required - copy .env.example to .env}
+      - OrderConnectionString=server=database;port=3306;database=orders;user=order-service;password=${DB_PASSWORD:?DB_PASSWORD is required - copy .env.example to .env};SslMode=None
       - ASPNETCORE_ENVIRONMENT=Production
       - Database__ApplyMigrationsOnStartup=true
       - Jwt__Authority=${JWT_AUTHORITY:-}
       - Jwt__Audience=${JWT_AUDIENCE:-orders-api}
       - Redis__ConnectionString=redis:6379
       - Otel__ServiceName=order-api-v2
+      - Cors__AllowedOrigins__0=*
     depends_on:
       db:
         condition: service_healthy
@@ -51,13 +54,13 @@ services:
       interval: 15s
       timeout: 5s
       retries: 5
-      start_period: 20s
+      start_period: 30s
 
   db:
     image: mysql:5.7
     container_name: order-db
     volumes:
-      - ./mysql-init.sql:/docker-entrypoint-initdb.d/init.sql:delegated
+      - db-data:/var/lib/mysql
     environment:
       - MYSQL_ROOT_PASSWORD=${DB_PASSWORD:?DB_PASSWORD is required - copy .env.example to .env}
       - MYSQL_DATABASE=orders
@@ -78,4 +81,7 @@ services:
     ports:
       - "6379:6379"
     command: redis-server --save "" --appendonly no
+
+volumes:
+  db-data:
       

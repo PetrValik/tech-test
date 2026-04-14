@@ -95,11 +95,8 @@ public static class WebApplicationExtensions
     /// <param name="app">The configured web application to map routes onto.</param>
     public static void MapApiEndpoints(this WebApplication app)
     {
-        if (app.Environment.IsDevelopment())
-        {
-            app.MapOpenApi();
-            app.MapScalarApiReference();
-        }
+        app.MapOpenApi();
+        app.MapScalarApiReference();
 
         app.MapEndpoints();
     }

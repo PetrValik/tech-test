@@ -135,7 +135,7 @@ public class OrderController : ControllerBase
             UpdateOrderStatusResult.OrderNotFound => NotFound(),
             UpdateOrderStatusResult.InvalidStatus => BadRequest(new { error = $"Invalid status: {request.StatusName}" }),
             UpdateOrderStatusResult.ConcurrencyConflict => Conflict(new { error = "The order was modified by another request. Please retry." }),
-            _                                    => StatusCode(500)
+            _                                    => StatusCode(500, new { error = "An unexpected error occurred." })
         };
     }
 

@@ -50,14 +50,14 @@ public sealed class StaleOrderCleanupService(
     /// <param name="staleDays">Number of days after which a "Created" order is considered stale.</param>
     /// <param name="cancellationToken">Token used to cancel the cleanup operation.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous cleanup operation.</returns>
-    public async Task CleanupAsync(int staleDays, CancellationToken cancellationToken)
+    internal async Task CleanupAsync(int staleDays, CancellationToken cancellationToken)
     {
         using var scope = serviceProvider.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<OrderContext>();
 
-        var (createdStatus, cancelledStatus) = await GetRequiredStatusesAsync(db, cancellationToken);
+        var (createdStatus, failedStatus) = await GetRequiredStatusesAsync(db, cancellationToken);
 
-        if (createdStatus is null || cancelledStatus is null)
+        if (createdStatus is null || failedStatus is null)
         {
             logger.LogWarning("Required statuses not found in database — skipping cleanup");
             return;
@@ -79,7 +79,7 @@ public sealed class StaleOrderCleanupService(
         foreach (var orderId in staleOrderIds)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            cancelledCount += await TryCancelOrderAsync(orderId, createdStatus.Id, cancelledStatus.Id, cancellationToken);
+            cancelledCount += await TryCancelOrderAsync(orderId, createdStatus.Id, failedStatus.Id, cancellationToken);
         }
 
         logger.LogInformation(
@@ -97,18 +97,22 @@ public sealed class StaleOrderCleanupService(
     /// A tuple of the "Created" and "Failed" <see cref="OrderStatus"/> entities,
     /// either of which may be <see langword="null"/> if not found in the database.
     /// </returns>
-    private static async Task<(OrderStatus? created, OrderStatus? cancelled)> GetRequiredStatusesAsync(
+    /// <remarks>
+    /// The second status is "Failed" (the stale order target state).
+    /// Variables use <c>failedStatus</c> to match the database value.
+    /// </remarks>
+    private static async Task<(OrderStatus? created, OrderStatus? failed)> GetRequiredStatusesAsync(
         OrderContext db, CancellationToken cancellationToken)
     {
         var createdStatus = await db.OrderStatuses
             .AsNoTracking()
             .FirstOrDefaultAsync(status => status.Name == OrderStatusNames.Created, cancellationToken);
 
-        var cancelledStatus = await db.OrderStatuses
+        var failedStatus = await db.OrderStatuses
             .AsNoTracking()
             .FirstOrDefaultAsync(status => status.Name == OrderStatusNames.Failed, cancellationToken);
 
-        return (createdStatus, cancelledStatus);
+        return (createdStatus, failedStatus);
     }
 
     /// <summary>
@@ -118,11 +122,11 @@ public sealed class StaleOrderCleanupService(
     /// </summary>
     /// <param name="orderId">The raw byte-array identifier of the order to cancel.</param>
     /// <param name="createdStatusId">The raw byte-array identifier of the "Created" status.</param>
-    /// <param name="cancelledStatusId">The raw byte-array identifier of the "Failed" status to transition into.</param>
+    /// <param name="failedStatusId">The raw byte-array identifier of the "Failed" status to transition into.</param>
     /// <param name="cancellationToken">Token used to cancel the database operations.</param>
     /// <returns>1 if the order was cancelled, 0 if it was skipped.</returns>
     private async Task<int> TryCancelOrderAsync(
-        byte[] orderId, byte[] createdStatusId, byte[] cancelledStatusId, CancellationToken cancellationToken)
+        byte[] orderId, byte[] createdStatusId, byte[] failedStatusId, CancellationToken cancellationToken)
     {
         using var scope = serviceProvider.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<OrderContext>();
@@ -141,11 +145,11 @@ public sealed class StaleOrderCleanupService(
             Id           = Guid.NewGuid().ToByteArray(),
             OrderId      = orderId,
             FromStatusId = createdStatusId,
-            ToStatusId   = cancelledStatusId,
+            ToStatusId   = failedStatusId,
             ChangedAt    = DateTime.UtcNow
         });
 
-        order.StatusId        = cancelledStatusId;
+        order.StatusId        = failedStatusId;
         order.ConcurrencyStamp = Guid.NewGuid().ToString("N");
 
         try

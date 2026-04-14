@@ -47,7 +47,7 @@ public sealed class IdempotencyCleanupService(
     /// <param name="retentionDays">Number of days to retain idempotency records before deleting them.</param>
     /// <param name="cancellationToken">Token used to cancel the cleanup operation.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous cleanup operation.</returns>
-    public async Task CleanupAsync(int retentionDays, CancellationToken cancellationToken)
+    private async Task CleanupAsync(int retentionDays, CancellationToken cancellationToken)
     {
         using var scope = serviceProvider.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<OrderContext>();

@@ -300,8 +300,8 @@ RequestLoggingMiddleware     — Logs Method, Path, StatusCode, Duration for eve
 UseHttpsRedirection()        — Redirects HTTP → HTTPS
 UseCors()                    — Configurable CORS: AllowedOrigins from config; AllowAny only in Development
 UseRouting()                 — MVC routing
-UseRateLimiter()             — Fixed-window rate limiting (100 req/min, partitioned per user → IP → anonymous)
 UseAuthentication()          — JWT Bearer (registered only when Jwt:Authority is configured)
+UseRateLimiter()             — Fixed-window rate limiting (100 req/min, partitioned per user → IP → anonymous)
 UseAuthorization()           — Denies unauthenticated requests when auth is enabled; allows all in dev
 UseEndpoints()               — Controller + health check endpoints
 ```
@@ -416,7 +416,7 @@ See [docs/api/](docs/api/) for detailed per-endpoint documentation with request/
 
 ### Conditional JWT Authentication
 
-`Jwt:Authority` is optional. When empty (local dev), the service registers the JWT Bearer scheme but sets a null fallback policy — all requests are permitted. When set (production), the fallback policy enforces authentication on every endpoint. This allows `dotnet run` without a running IdP while keeping auth enforced in production with a single env-var change.
+`Jwt:Authority` is optional. When empty (local dev), the service skips JWT Bearer registration and overrides the default authorization policy with a pass-through assertion — all requests are permitted. When set (production), the JWT Bearer scheme is registered and the fallback policy enforces authentication on every endpoint. This allows `dotnet run` without a running IdP while keeping auth enforced in production with a single env-var change.
 
 ### ResellerId Index
 

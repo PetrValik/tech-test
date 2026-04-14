@@ -24,7 +24,6 @@ namespace OrderApi.Infrastructure.Migrations
                 type: "varchar(32)",
                 maxLength: 32,
                 nullable: false,
-                defaultValueSql: "(REPLACE(UUID(), '-', ''))",
                 oldClrType: typeof(string),
                 oldType: "varchar(32)",
                 oldMaxLength: 32)
@@ -83,8 +82,7 @@ namespace OrderApi.Infrastructure.Migrations
                 nullable: false,
                 oldClrType: typeof(string),
                 oldType: "varchar(32)",
-                oldMaxLength: 32,
-                oldDefaultValueSql: "(REPLACE(UUID(), '-', ''))")
+                oldMaxLength: 32)
                 .Annotation("MySql:CharSet", "utf8mb4")
                 .OldAnnotation("MySql:CharSet", "utf8mb4");
 

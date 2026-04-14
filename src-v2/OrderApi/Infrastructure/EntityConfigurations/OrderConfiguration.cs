@@ -27,8 +27,7 @@ internal sealed class OrderConfiguration : IEntityTypeConfiguration<Entities.Ord
         entity.Property(order => order.ConcurrencyStamp)
             .IsRequired()
             .HasMaxLength(32)
-            .IsConcurrencyToken()
-            .HasDefaultValueSql("(REPLACE(UUID(), '-', ''))");
+            .IsConcurrencyToken();
         entity.HasOne(order => order.Status).WithMany(status => status.Orders)
             .HasForeignKey(order => order.StatusId).OnDelete(DeleteBehavior.ClientSetNull)
             .HasConstraintName("order_ofk_1");

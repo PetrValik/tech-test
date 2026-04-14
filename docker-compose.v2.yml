@@ -10,7 +10,7 @@ services:
     ports:
       - "8001:8080"
     environment:
-      - OrderConnectionString=server=database;port=3306;database=orders;user=order-service;password=${DB_PASSWORD:?DB_PASSWORD is required - copy .env.example to .env}
+      - OrderConnectionString=server=database;port=3306;database=orders;user=order-service;password=${DB_PASSWORD:?DB_PASSWORD is required - copy .env.example to .env};SslMode=None
       - ASPNETCORE_ENVIRONMENT=Production
       - Database__ApplyMigrationsOnStartup=true
       - Jwt__Authority=${JWT_AUTHORITY:-}
@@ -18,6 +18,7 @@ services:
       - Redis__ConnectionString=${REDIS_CONNECTION_STRING:-redis:6379}
       - Otel__ServiceName=order-api-v2
       - Otel__Environment=${ASPNETCORE_ENVIRONMENT:-production}
+      - Cors__AllowedOrigins__0=*
       # Uncomment to enable Azure Monitor tracing:
       # - Otel__AzureMonitorConnectionString=${AZURE_MONITOR_CONNECTION_STRING:-}
     depends_on:
@@ -41,6 +42,9 @@ services:
       - db-v2-data:/var/lib/mysql
     environment:
       - MYSQL_ROOT_PASSWORD=${DB_PASSWORD:?DB_PASSWORD is required}
+      - MYSQL_DATABASE=orders
+      - MYSQL_USER=order-service
+      - MYSQL_PASSWORD=${DB_PASSWORD}
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --lower_case_table_names=1
     ports:
       - "3308:3306"

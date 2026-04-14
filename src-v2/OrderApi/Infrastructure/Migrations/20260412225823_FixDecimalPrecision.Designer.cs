@@ -57,11 +57,8 @@ namespace OrderApi.Infrastructure.Migrations
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .IsRequired()
-                        .ValueGeneratedOnAdd()
                         .HasMaxLength(32)
-                        .HasColumnType("varchar(32)")
-                        .HasDefaultValueSql("(REPLACE(UUID(), '-', ''))");
-
+                        .HasColumnType("varchar(32)");
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime(6)");
 
