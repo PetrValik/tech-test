@@ -351,11 +351,11 @@ All routes are prefixed with `/api/v1/`. Two rate-limiting tiers apply: **`fixed
 
 | Method | Route | Description | Cache | Rate limit |
 |---|---|---|---|---|
-| `GET` | `/api/v1/orders` | Paginated list of all orders | ✅ 1 min | fixed |
-| `GET` | `/api/v1/orders/{orderId}` | Order detail + ETag response header | ✅ 1 min | fixed |
-| `GET` | `/api/v1/orders/status/{statusName}` | Orders filtered by status | ✅ 1 min | fixed |
-| `GET` | `/api/v1/orders/search` | Multi-filter search with pagination | ✅ 1 min | expensive |
-| `GET` | `/api/v1/orders/profit/monthly` | Monthly profit for Completed orders | ✅ 1 min | expensive |
+| `GET` | `/api/v1/orders` | Paginated list of all orders | 1 min | fixed |
+| `GET` | `/api/v1/orders/{orderId}` | Order detail + ETag response header | 1 min | fixed |
+| `GET` | `/api/v1/orders/status/{statusName}` | Orders filtered by status | 1 min | fixed |
+| `GET` | `/api/v1/orders/search` | Multi-filter search with pagination | 1 min | expensive |
+| `GET` | `/api/v1/orders/profit/monthly` | Monthly profit for Completed orders | 1 min | expensive |
 | `GET` | `/api/v1/orders/{orderId}/history` | Status change audit log | ❌ | fixed |
 | `GET` | `/api/v1/orders/deleted` | Paginated soft-deleted orders | ❌ | fixed |
 | `POST` | `/api/v1/orders` | Create a new order (idempotent via `Idempotency-Key`) | evicts | fixed |
