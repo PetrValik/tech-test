@@ -264,3 +264,4 @@ Projects/ToolKit/Giacom\.ToolKit\.UI/node_modules_bak/
 *.idea
 # Claude AI
 .claude/
+.DS_Store
