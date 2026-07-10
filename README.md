@@ -1,6 +1,20 @@
-# Order API
+# Order API — Two Architectures, One Domain
 
-A RESTful microservice for managing customer orders, written in C# (.NET 8) using a classic **Layered Architecture** pattern.
+> A production-grade order-management microservice, implemented **twice** — once as a classic layered architecture (.NET 8) and once as a vertical-slice / minimal-API design (.NET 10) — to contrast two ways of building the same service.
+
+![C#](https://img.shields.io/badge/C%23-239120?logo=csharp&logoColor=white)
+![.NET 8](https://img.shields.io/badge/.NET-8.0_LTS-512BD4?logo=dotnet&logoColor=white)
+![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)
+![EF Core](https://img.shields.io/badge/EF_Core-MySQL-00758F?logo=mysql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
+![Tests](https://img.shields.io/badge/tests-148_passing-brightgreen)
+
+This repository grew out of a backend **technical assessment** and was then deliberately expanded into a portfolio showcase. Rather than delivering a single solution, it contains two parallel, fully-working implementations of the same REST API so the trade-offs between architectural styles are visible side by side:
+
+- **`src/` — V1:** enterprise **Layered Architecture** on **.NET 8** (Controller → Service → Repository → EF Core). Familiar, explicit, easy to onboard.
+- **`src-v2/` — V2:** **Vertical Slice Architecture** on **.NET 10** (MediatR + Minimal API), with idempotency, ETag concurrency, soft-delete, output caching, OpenTelemetry, background jobs and architecture tests.
+
+Both run together via Docker Compose (V1 on port 8000, V2 on port 8001) against a shared MySQL instance. See the [V1 vs V2 comparison](#v1-vs-v2-comparison) for a feature-by-feature breakdown, and [Improvements & Design Decisions](#improvements--design-decisions) for the *why* behind each pattern.
 
 ---
 
